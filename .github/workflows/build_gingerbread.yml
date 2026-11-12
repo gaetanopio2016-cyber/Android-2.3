@@ -46,9 +46,10 @@ jobs:
         shell: bash
         run: |
           cd ~/android/gingerbread
+          rm -f vendor/cyanogen/vendorsetup.sh
           . build/envsetup.sh
           # Forza la configurazione pulita per il nostro device
-          lunch full_janice-eng || lunch cm_janice-eng
+          lunch cm_janice-eng
           make -j$(nproc) bacon  
           
       - name: Salva la ROM compilata come Artifact
