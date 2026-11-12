@@ -16,7 +16,14 @@ jobs:
           apt-get install -y sudo curl wget git-core gnupg flex bison gperf build-essential \
             zip zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev \
             libx11-dev libreadline-dev libgl1-mesa-dev tofrodos python-markdown \
-            libxml2-utils xsltproc g++-multilib gcc-multilib openjdk-8-jdk python
+            libxml2-utils xsltproc g++-multilib gcc-multilib python ca-certificates-java
+
+      - name: Installa il VERO Java 6 (OpenJDK 6)
+        run: |
+          echo "deb http://security.ubuntu.com/ubuntu trusty-security main universe" >> /etc/apt/sources.list
+          apt-get update
+          apt-get install -y openjdk-6-jdk
+          update-java-alternatives -s java-1.6.0-openjdk-amd64 || true
 
       - name: Configura Git
         run: |
@@ -29,33 +36,28 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo-1 > ~/bin/repo
           chmod a+x ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
-           
+
       - name: Inizializza e scarica i sorgenti
         run: |
           mkdir -p ~/android/gingerbread
           cd ~/android/gingerbread
           repo init -u https://github.com/CyanogenMod/android.git -b gingerbread --depth=1
-          # Rimuove il repo ti_wpan rotto e inutile per il Galaxy S Advance
           sed -i '/android_hardware_ti_wpan/d' .repo/manifest.xml
-          # Sostituisce il link Google prebuilt rotto con il mirror GitHub
           sed -i 's|https://android.googlesource.com/platform/prebuilt|https://github.com/CyanogenMod/android_prebuilt|g' .repo/manifest.xml
-          # Scarica tutto ignorando eventuali branch minori mancanti
           repo sync -j8 --force-sync -c --no-tags || true
-          
+
       - name: Avvia la compilazione
         shell: bash
         run: |
           cd ~/android/gingerbread
           echo "" > vendor/cyanogen/products/AndroidProducts.mk
           rm -f vendor/cyanogen/vendorsetup.sh
-          sed -i 's/1\.6/1.8/g' build/core/main.mk
           . build/envsetup.sh
-          # Forza la configurazione pulita per il nostro device
           lunch generic-eng
-          make -j$(nproc) bacon  
-          
+          make -j$(nproc)
+
       - name: Salva la ROM compilata come Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CyanogenMod-7-Gingerbread-janice
-          path: ~/android/gingerbread/out/target/product/janice/*.zip
+          name: Android-2.3-Gingerbread
+          path: ~/android/gingerbread/out/target/product/generic/*.img
