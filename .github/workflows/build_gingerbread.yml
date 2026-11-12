@@ -43,12 +43,12 @@ jobs:
           repo sync -j8 --force-sync -c --no-tags || true
           
       - name: Avvia la compilazione
+        shell: bash
         run: |
           cd ~/android/gingerbread
-          source build/envsetup.sh
+          . build/envsetup.sh
           lunch cm_janice-eng
-          make -j$(nproc) bacon
-
+          make -j$(nproc) bacon      
       - name: Salva la ROM compilata come Artifact
         uses: actions/upload-artifact@v4
         with:
