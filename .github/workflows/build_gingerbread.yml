@@ -1,60 +1,46 @@
 name: Compile Android 2.3 Gingerbread (janice)
 
 on:
-  workflow_dispatch: # Permette di avviare la compilazione manualmente da GitHub
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-18.04 # Usiamo Ubuntu 18.04 per compatibilità con i vecchi toolchain
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:18.04
 
     steps:
-      - name: Libera spazio su disco (fondamentale per GitHub Actions)
+      - name: Aggiorna e installa dipendenze base e legacy
         run: |
-          echo "Spazio libero iniziale:"
-          df -h
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          echo "Spazio dopo la pulizia:"
-          df -h
-
-      - name: Installa dipendenze legacy
-        run: |
-          sudo dpkg --add-architecture i386
-          sudo apt-get update
-          sudo apt-get install -y \
-            git-core gnupg flex bison gperf build-essential \
-            zip curl zlib1g-dev libc6-dev lib32ncurses5-dev \
-            ia32-libs x11proto-core-dev libx11-dev libreadline-dev \
-            libgl1-mesa-dev tofrodos python-markdown libxml2-utils xsltproc \
-            openjdk-6-jdk g++-multilib gcc-multilib
+          apt-get update
+          apt-get install -y sudo curl wget git-core gnupg flex bison gperf build-essential \
+            zip zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev \
+            libx11-dev libreadline-dev libgl1-mesa-dev tofrodos python-markdown \
+            libxml2-utils xsltproc g++-multilib gcc-multilib openjdk-8-jdk python
 
       - name: Configura Git
         run: |
           git config --global user.email "builder@github.action"
           git config --global user.name "Android Builder"
 
-      - name: Installa Google Repo
+      - name: Installa Google Repo (versione compatibile Python 2/3)
         run: |
           mkdir -p ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          curl https://storage.googleapis.com/git-repo-downloads/repo-1 > ~/bin/repo
           chmod a+x ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
 
-      - name: Inizializza e scarica i sorgenti (Shallow clone)
+      - name: Inizializza e scarica i sorgenti
         run: |
           mkdir -p ~/android/gingerbread
           cd ~/android/gingerbread
-          # Sostituisci questo manifest con quello storico della CyanogenMod 7 per Galaxy S Advance se lo trovi
-          repo init -u git://github.com/CyanogenMod/android.git -b gingerbread --depth=1
+          repo init -u https://github.com/CyanogenMod/android.git -b gingerbread --depth=1
           repo sync -j8 --force-sync
 
       - name: Avvia la compilazione
         run: |
           cd ~/android/gingerbread
           source build/envsetup.sh
-          # Imposta il target specifico per il Galaxy S Advance (janice)
           lunch cm_janice-eng
           make -j$(nproc) bacon
 
