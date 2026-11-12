@@ -29,7 +29,7 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo-1 > ~/bin/repo
           chmod a+x ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
-          
+           
       - name: Inizializza e scarica i sorgenti
         run: |
           mkdir -p ~/android/gingerbread
@@ -47,8 +47,10 @@ jobs:
         run: |
           cd ~/android/gingerbread
           . build/envsetup.sh
-          lunch cm_janice-eng
-          make -j$(nproc) bacon      
+          # Forza la configurazione pulita per il nostro device
+          lunch full_janice-eng || lunch cm_janice-eng
+          make -j$(nproc) bacon  
+          
       - name: Salva la ROM compilata come Artifact
         uses: actions/upload-artifact@v4
         with:
