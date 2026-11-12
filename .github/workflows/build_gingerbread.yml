@@ -29,14 +29,19 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo-1 > ~/bin/repo
           chmod a+x ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
-
+          
       - name: Inizializza e scarica i sorgenti
         run: |
           mkdir -p ~/android/gingerbread
           cd ~/android/gingerbread
           repo init -u https://github.com/CyanogenMod/android.git -b gingerbread --depth=1
-          repo sync -j8 --force-sync
-
+          # Rimuove il repo ti_wpan rotto e inutile per il Galaxy S Advance
+          sed -i '/android_hardware_ti_wpan/d' .repo/manifest.xml
+          # Sostituisce il link Google prebuilt rotto con il mirror GitHub
+          sed -i 's|https://android.googlesource.com/platform/prebuilt|https://github.com/CyanogenMod/android_prebuilt|g' .repo/manifest.xml
+          # Scarica tutto ignorando eventuali branch minori mancanti
+          repo sync -j8 --force-sync -c --no-tags || true
+          
       - name: Avvia la compilazione
         run: |
           cd ~/android/gingerbread
