@@ -48,6 +48,7 @@ jobs:
           cd ~/android/gingerbread
           echo "" > vendor/cyanogen/products/AndroidProducts.mk
           rm -f vendor/cyanogen/vendorsetup.sh
+          sed -i 's/1\.6/1.8/g' build/core/main.mk
           . build/envsetup.sh
           # Forza la configurazione pulita per il nostro device
           lunch generic-eng
