@@ -7,11 +7,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:18.04
+      image: ubuntu:14.04
       options: --user root
 
     steps:
-      - name: Aggiorna e installa dipendenze base e legacy
+      - name: Configura i vecchi repo per Ubuntu 14.04
+        run: |
+          sed -i 's|archive.ubuntu.com|old-releases.ubuntu.com|g' /etc/apt/sources.list
+          sed -i 's|security.ubuntu.com|old-releases.ubuntu.com|g' /etc/apt/sources.list
+
+      - name: Installa dipendenze, Java 6 e GCC 4.8
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -19,25 +24,8 @@ jobs:
           apt-get install -y sudo curl wget git-core gnupg flex bison gperf build-essential \
             zip zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev \
             libx11-dev libreadline-dev libgl1-mesa-dev tofrodos python-markdown \
-            libxml2-utils xsltproc g++-multilib gcc-multilib python ca-certificates
-
-      - name: Installa Java 6 e compilatore GCC 4.8 legacy
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          # Usiamo i mirror old-releases per Trusty così i pacchetti non restituiscono 404 o HTML
-          echo "deb http://old-releases.ubuntu.com/ubuntu trusty main universe" > /etc/apt/sources.list
-          echo "deb http://old-releases.ubuntu.com/ubuntu trusty-updates main universe" >> /etc/apt/sources.list
-          
-          # Aggiorniamo ignorando temporaneamente i check di scadenza firme dei vecchi repo
-          apt-get -o Acquire::Check-Valid-Until=false update || true
-          
-          apt-get install -y --allow-unauthenticated \
-            gcc-4.8 g++-4.8 gcc-4.8-multilib g++-4.8-multilib \
+            libxml2-utils xsltproc g++-multilib gcc-multilib python ca-certificates \
             openjdk-6-jdk openjdk-6-jre
-          
-          update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 100
-          update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 100
 
           echo "JAVA_HOME=/usr/lib/jvm/java-6-openjdk-amd64" >> $GITHUB_ENV
           echo "/usr/lib/jvm/java-6-openjdk-amd64/bin" >> $GITHUB_PATH
@@ -47,7 +35,7 @@ jobs:
           git config --global user.email "builder@github.action"
           git config --global user.name "Android Builder"
 
-      - name: Installa Google Repo (versione compatibile Python 2/3)
+      - name: Installa Google Repo
         run: |
           mkdir -p ~/bin
           curl -s https://storage.googleapis.com/git-repo-downloads/repo-1 > ~/bin/repo
@@ -78,3 +66,4 @@ jobs:
         with:
           name: Android-2.3-Gingerbread
           path: ~/android/gingerbread/out/target/product/generic/*.img
+          
