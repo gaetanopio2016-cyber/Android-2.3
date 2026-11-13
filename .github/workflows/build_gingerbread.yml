@@ -25,20 +25,19 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" >> /etc/apt/sources.list
-          apt-get update
-          apt-get install -y gcc-4.8 g++-4.8 gcc-4.8-multilib g++-4.8-multilib
+          # Usiamo i mirror old-releases per Trusty così i pacchetti non restituiscono 404 o HTML
+          echo "deb http://old-releases.ubuntu.com/ubuntu trusty main universe" > /etc/apt/sources.list
+          echo "deb http://old-releases.ubuntu.com/ubuntu trusty-updates main universe" >> /etc/apt/sources.list
+          
+          # Aggiorniamo ignorando temporaneamente i check di scadenza firme dei vecchi repo
+          apt-get -o Acquire::Check-Valid-Until=false update || true
+          
+          apt-get install -y --allow-unauthenticated \
+            gcc-4.8 g++-4.8 gcc-4.8-multilib g++-4.8-multilib \
+            openjdk-6-jdk openjdk-6-jre
           
           update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 100
           update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 100
-
-          # Download diretto e sicuro di Java 6 da Liberica (GitHub ufficiale)
-          mkdir -p /usr/lib/jvm
-          cd /usr/lib/jvm
-          curl -L -o java6.tar.gz "https://github.com/bell-sw/Liberica/releases/download/6u45-b30/bellsoft-jdk6u45-linux-amd64.tar.gz"
-          tar -xzf java6.tar.gz
-          mv jdk-6u45 java-6-openjdk-amd64
-          rm -f java6.tar.gz
 
           echo "JAVA_HOME=/usr/lib/jvm/java-6-openjdk-amd64" >> $GITHUB_ENV
           echo "/usr/lib/jvm/java-6-openjdk-amd64/bin" >> $GITHUB_PATH
