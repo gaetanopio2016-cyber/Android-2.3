@@ -33,9 +33,9 @@ jobs:
 
           mkdir -p /usr/lib/jvm
           cd /usr/lib/jvm
-          curl -sL https://github.com/adoptium/temurin6-binaries/releases/download/jdk6u41-b04/OpenJDK6U-jdk_x64_linux_hotspot_6u41b04.tar.gz -o java6.tar.gz
+          curl -L -o java6.tar.gz "https://github.com/frekele/oracle-java/releases/download/6u45-b06/jdk-6u45-linux-x64.tar.gz"
           tar -xzf java6.tar.gz
-          mv jdk6u41-b04 java-6-openjdk-amd64
+          mv jdk1.6.0_45 java-6-openjdk-amd64
           rm -f java6.tar.gz
           
           echo "JAVA_HOME=/usr/lib/jvm/java-6-openjdk-amd64" >> $GITHUB_ENV
