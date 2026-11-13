@@ -19,25 +19,23 @@ jobs:
           apt-get install -y sudo curl wget git-core gnupg flex bison gperf build-essential \
             zip zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev \
             libx11-dev libreadline-dev libgl1-mesa-dev tofrodos python-markdown \
-            libxml2-utils xsltproc g++-multilib gcc-multilib python ca-certificates
+            libxml2-utils xsltproc g++-multilib gcc-multilib python ca-certificates software-properties-common
 
       - name: Installa Java 6 e compilatore GCC 4.8 legacy
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
+          # Aggiungiamo i repository storici per recuperare Java 6 e GCC 4.8 in sicurezza
+          add-apt-repository -y ppa:openjdk-r/ppa
           echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" >> /etc/apt/sources.list
           apt-get update
-          apt-get install -y gcc-4.8 g++-4.8 gcc-4.8-multilib g++-4.8-multilib
+          
+          # Installiamo gcc-4.8 e openjdk-6-jdk direttamente via apt ora che il PPA risolve le dipendenze
+          apt-get install -y gcc-4.8 g++-4.8 gcc-4.8-multilib g++-4.8-multilib openjdk-6-jdk
+          
           update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 100
           update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 100
 
-          mkdir -p /usr/lib/jvm
-          cd /usr/lib/jvm
-          curl -L -o java6.tar.gz "https://github.com/frekele/oracle-java/releases/download/6u45-b06/jdk-6u45-linux-x64.tar.gz"
-          tar -xzf java6.tar.gz
-          mv jdk1.6.0_45 java-6-openjdk-amd64
-          rm -f java6.tar.gz
-          
           echo "JAVA_HOME=/usr/lib/jvm/java-6-openjdk-amd64" >> $GITHUB_ENV
           echo "/usr/lib/jvm/java-6-openjdk-amd64/bin" >> $GITHUB_PATH
 
