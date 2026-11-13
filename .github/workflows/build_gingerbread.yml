@@ -32,12 +32,12 @@ jobs:
           update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 100
           update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 100
 
-          # Download diretto dei binari Java 6 da Azul Zulu (zero dipendenze apt, zero errori)
+          # Download diretto e sicuro di Java 6 da Liberica (GitHub ufficiale)
           mkdir -p /usr/lib/jvm
           cd /usr/lib/jvm
-          curl -sL https://cdn.azul.com/zulu/bin/zulu6.42.0-ca-jdk6.0.113-linux_x64.tar.gz -o java6.tar.gz
+          curl -L -o java6.tar.gz "https://github.com/bell-sw/Liberica/releases/download/6u45-b30/bellsoft-jdk6u45-linux-amd64.tar.gz"
           tar -xzf java6.tar.gz
-          mv zulu6.42.0-ca-jdk6.0.113-linux_x64 java-6-openjdk-amd64
+          mv jdk-6u45 java-6-openjdk-amd64
           rm -f java6.tar.gz
 
           echo "JAVA_HOME=/usr/lib/jvm/java-6-openjdk-amd64" >> $GITHUB_ENV
