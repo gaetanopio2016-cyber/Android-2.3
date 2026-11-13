@@ -7,16 +7,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:14.04
+      image: ubuntu:20.04
       options: --user root
 
     steps:
-      - name: Configura i vecchi repo per Ubuntu 14.04
-        run: |
-          sed -i 's|archive.ubuntu.com|old-releases.ubuntu.com|g' /etc/apt/sources.list
-          sed -i 's|security.ubuntu.com|old-releases.ubuntu.com|g' /etc/apt/sources.list
-
-      - name: Installa dipendenze, Java 6 e GCC 4.8
+      - name: Installa dipendenze base e scarica Java 6 direttamente
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -24,11 +19,20 @@ jobs:
           apt-get install -y sudo curl wget git-core gnupg flex bison gperf build-essential \
             zip zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev \
             libx11-dev libreadline-dev libgl1-mesa-dev tofrodos python-markdown \
-            libxml2-utils xsltproc g++-multilib gcc-multilib python ca-certificates \
-            openjdk-6-jdk openjdk-6-jre
+            libxml2-utils xsltproc g++-multilib gcc-multilib python ca-certificates
 
-          echo "JAVA_HOME=/usr/lib/jvm/java-6-openjdk-amd64" >> $GITHUB_ENV
-          echo "/usr/lib/jvm/java-6-openjdk-amd64/bin" >> $GITHUB_PATH
+          # Scarichiamo direttamente il pacchetto .deb stabile di OpenJDK 6 da Debian/Ubuntu archive
+          mkdir -p /tmp/java6 && cd /tmp/java6
+          wget -q https://launchpad.net/~openjdk-r/+archive/ubuntu/ppa/+build/13444062/+files/openjdk-6-jdk_6b41-1.13.13-1ubuntu1~16.04_amd64.deb
+          wget -q https://launchpad.net/~openjdk-r/+archive/ubuntu/ppa/+build/13444062/+files/openjdk-6-jre_6b41-1.13.13-1ubuntu1~16.04_amd64.deb
+          wget -q https://launchpad.net/~openjdk-r/+archive/ubuntu/ppa/+build/13444062/+files/openjdk-6-jre-lib_6b41-1.13.13-1ubuntu1~16.04_all.deb
+          
+          # Installiamo forzando i pacchetti scaricati localmente senza rogne di repo online
+          dpkg -i *.deb || apt-get install -f -y
+          rm -rf /tmp/java6
+
+          echo "JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-amd64" >> $GITHUB_ENV
+          echo "/usr/lib/jvm/java-1.6.0-openjdk-amd64/bin" >> $GITHUB_PATH
 
       - name: Configura Git
         run: |
@@ -66,4 +70,3 @@ jobs:
         with:
           name: Android-2.3-Gingerbread
           path: ~/android/gingerbread/out/target/product/generic/*.img
-          
