@@ -8,22 +8,37 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:18.04
+      options: --user root
 
     steps:
       - name: Aggiorna e installa dipendenze base e legacy
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
           apt-get update
           apt-get install -y sudo curl wget git-core gnupg flex bison gperf build-essential \
             zip zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev \
             libx11-dev libreadline-dev libgl1-mesa-dev tofrodos python-markdown \
-            libxml2-utils xsltproc g++-multilib gcc-multilib python ca-certificates-java
+            libxml2-utils xsltproc g++-multilib gcc-multilib python ca-certificates
 
-      - name: Installa il VERO Java 6 (OpenJDK 6)
+      - name: Installa Java 6 e compilatore GCC 4.8 legacy
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
+          echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" >> /etc/apt/sources.list
           echo "deb http://security.ubuntu.com/ubuntu trusty-security main universe" >> /etc/apt/sources.list
           apt-get update
-          apt-get install -y openjdk-6-jdk
-          update-java-alternatives -s java-1.6.0-openjdk-amd64 || true
+          apt-get install -y --allow-downgrades \
+            openjdk-6-jdk \
+            openjdk-6-jre \
+            openjdk-6-jre-headless \
+            openjdk-6-jre-lib \
+            tzdata-java \
+            gcc-4.8 g++-4.8 gcc-4.8-multilib g++-4.8-multilib
+          update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 100
+          update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 100
+          echo "JAVA_HOME=/usr/lib/jvm/java-6-openjdk-amd64" >> $GITHUB_ENV
+          echo "/usr/lib/jvm/java-6-openjdk-amd64/bin" >> $GITHUB_PATH
 
       - name: Configura Git
         run: |
@@ -33,7 +48,7 @@ jobs:
       - name: Installa Google Repo (versione compatibile Python 2/3)
         run: |
           mkdir -p ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo-1 > ~/bin/repo
+          curl -s https://storage.googleapis.com/git-repo-downloads/repo-1 > ~/bin/repo
           chmod a+x ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
 
